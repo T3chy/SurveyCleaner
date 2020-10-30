@@ -7,8 +7,7 @@ yearranges = ["Por favor complete con sus datos: - Código Postal","Por favor co
 def toPureNumeric(value): # no return cuz pass by reference, baby
     if isinstance(value, str):
         value = value.replace("O", "0")
-        value = value.replace("o","0")
-        re.sub("\D", "", value)
+        value = re.sub("\D", "", value)
     else:
         pass
     return value
@@ -18,14 +17,15 @@ for index, response in survey.iterrows():
         response[q] = toPureNumeric(response[q])
         #print(response[q])
         if response[q] != tmp and not (isinstance(response[q], float) and  math.isnan(response[q])):
-            print("GOT ONE! Replaced " + tmp + " with " + response[q])
+            print("GOT ONE! Replaced " + tmp + " with " + response[q]+  " at respondant " + str(index) + " question: " + q +" because it is nonsensical here")
     for q in purleynumeric[1:]: # removes accidental ID and similar b/c no age or range of years would be > 100 in human context
         tmp = response[q]
         if not (isinstance(response[q], float) and  math.isnan(response[q])):
-            print(tmp)
             tmp = toPureNumeric(tmp)
-            if tmp == "."  or int(tmp) > 100:
-                print("GOT ONE! Deleting %s because it is nonsensical here", response[q])
+            if tmp == "":
+                pass
+            elif tmp == "."  or int(tmp) > 100:
+                print("GOT ONE! Deleting " + response[q] +  " at respondant " + str(index) + " question: " + q +" because it is nonsensical here")
                 response[q] = ""
         
 
