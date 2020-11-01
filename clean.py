@@ -1,3 +1,5 @@
+#TODO merge by ID and mark / resolve conflicts when merging- I think I can do this in pandas? Also, the history survey looks pretty clean- maybe more
+# multiple choice less short answer?
 import pandas as pd
 import re
 import math
@@ -5,11 +7,13 @@ changes = []
 tobecleaned = "SurveyClean.xlsx"
 read = pd.read_excel(tobecleaned)
 survey = read.copy()
-purleynumeric = ["Por favor complete con sus datos: - Código Postal","Por favor complete con sus datos: - Edad", "QID73 - ¿Hace cuántos años vive en los Estados Unidos?","QID80 - ¿Cuántas personas viven con Usted?"]
-yearranges = ["Por favor complete con sus datos: - Código Postal","Por favor complete con sus datos: - Edad", "QID73 - ¿Hace cuántos años vive en los Estados Unidos?","QID80 - ¿Cuántas personas viven con Usted?", "¿Cuál es el nivel más alto de educación que ha completado? - Escuela primaria (hasta qué año) - Texto", "¿Cuál es el nivel más alto de educación que ha completado? - Escuela media (hasta qué año) - Texto", "¿Cuál es el nivel más alto de educación que ha completado? - Escuela secundaria/preparatoria (hasta qué año) - Texto"]
-binaryranges = ["QID81 - ¿Está empleada/o actualmente?","¿Sabe Usted lo que son las pruebas genéticas?","¿Te has hecho una prueba genética alguna vez?", "Exámen de seno / Mamografía", "Exámen cervical / Papanicolao", "Exámen colorectal / Colonoscopía"]
-checkidx = 0
-checkq = ""
+isSurvey = 1
+if isSurvey:
+    purleynumeric = ["Por favor complete con sus datos: - Código Postal","Por favor complete con sus datos: - Edad", "QID73 - ¿Hace cuántos años vive en los Estados Unidos?","QID80 - ¿Cuántas personas viven con Usted?"]
+    yearranges = ["Por favor complete con sus datos: - Código Postal","Por favor complete con sus datos: - Edad", "QID73 - ¿Hace cuántos años vive en los Estados Unidos?","QID80 - ¿Cuántas personas viven con Usted?", "¿Cuál es el nivel más alto de educación que ha completado? - Escuela primaria (hasta qué año) - Texto", "¿Cuál es el nivel más alto de educación que ha completado? - Escuela media (hasta qué año) - Texto", "¿Cuál es el nivel más alto de educación que ha completado? - Escuela secundaria/preparatoria (hasta qué año) - Texto"]
+    binaryranges = ["QID81 - ¿Está empleada/o actualmente?","¿Sabe Usted lo que son las pruebas genéticas?","¿Te has hecho una prueba genética alguna vez?", "Exámen de seno / Mamografía", "Exámen cervical / Papanicolao", "Exámen colorectal / Colonoscopía"]
+else:
+    purleynumeric = ["Por favor complete con sus datos: - Código Postal", "Por favor complete con sus datos: - Edad"]
 def toPureNumeric(value): # no return cuz pass by reference, baby
     if isinstance(value, str):
         value = value.replace("O", "0")
@@ -54,7 +58,7 @@ for index, response in survey.iterrows():
         if response[q] != str(tmp).lower():
             print("GOT ONE! replaced " + str(tmp) + " with " + str(response[q]));
             changes.append("BINARY RESPONSE: Replaced " + str(tmp) + " with " + str(response[q]) + " respondant " + str(response["Por favor complete con sus datos: - Número de identificación del estudio"]) + " question: "  + q )
-        survey.loc[index,q] = response[q]
+        survey.loc[index,q] = response[q].lower()
 #survey.to_excel(tobecleaned.strip(".xlsx") + "_cleaned.xlsx")
 survey.to_excel("clean.xlsx")
 survey.compare(read).to_excel("diff.xlsx")
