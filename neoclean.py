@@ -15,7 +15,6 @@ class survey:
        # if re.search("[A-Z]{2}\d{4}", tmp) or re.search("[A-Z]{3}\d{4}", tmp):
         if re.search("[A-Z].*?\d{4}", str(tmp)):
             self.flagged.append(["POSSIBLE ID FOUND: " + str(tmp), "respondant # " + str(self.index), str(self.q)])
-            print("AAA")
             return 1
         else:
             return 0
@@ -53,6 +52,21 @@ class survey:
                     self.flagged.append([ str(index), str(q), self.data.loc[index,q]])
                 if str(self.data.loc[index,q]).lower() != tmp.lower():
                     self.changes.append("BINARY: Replaced " +  tmp + " with " + str(self.data.loc[index,q] + " at respondant" + str(self.data.loc[index,id]) + " question " + str(q)))
+    def cleanID(self):
+        self.q = id
+        for index, respondant in self.data.loc.iterrows():
+            self.index = index
+            pass
+    def removeDirectDupes(self):
+        tmp= self.data
+        self.data = self.data.drop_duplicates()
+        if not self.data.equals(tmp):
+            print(self.data.compare(tmp))
+        else:
+            print("no direct duplicates!")
+    def resolveIdDupes(self):
+        dupes = self.data.duplicated(subset=[id], keep=False)
+        print(self.data[dupes].sort_values(by=[id])[id])
     def write(self):
         self.data.compare(self.read).to_excel(self.name + "_diff.xlsx")
         self.data.to_excel(self.name + "_cleaned.xlsx")
