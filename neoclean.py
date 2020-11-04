@@ -2,6 +2,8 @@ import pandas as pd
 import re
 import math
 id = "Por favor complete con sus datos: - Número de identificación del estudio"
+pd.options.display.max_rows = 999
+post = "Por favor complete con sus datos: - Código Postal"
 class survey:
     def __init__(self,name):
         self.name = name.strip(".xlsx")
@@ -11,14 +13,15 @@ class survey:
         self.flagged = []
         self.index = 0
         self.q = ""
-    def possibleID(self,tmp):
+    def possibleID(self,tmp, log=True):
        # if re.search("[A-Z]{2}\d{4}", tmp) or re.search("[A-Z]{3}\d{4}", tmp):
         if re.search("[A-Z].*?\d{4}", str(tmp)):
-            self.flagged.append(["POSSIBLE ID FOUND: " + str(tmp), "respondant # " + str(self.index), str(self.q)])
+            if log:
+                self.flagged.append(["POSSIBLE ID FOUND: " + str(tmp), "respondant # " + str(self.index), str(self.q)])
             return 1
         else:
             return 0
-    def cleanNumeric(self, qs):
+    def cleanNumeric(self, qs,):
         for index, respondant in self.data.iterrows():
             self.index = index
             for q in qs:
@@ -36,7 +39,7 @@ class survey:
                     self.data.loc[index,q] = re.sub("\D", "", self.data.loc[index,q])
                     self.changes.append("NUMERIC: Replaced " + tmp + " with " +  str(self.data.loc[index,q]) + " at respondant " + str(self.data.loc[index,id]) + " question " +  str(q))
     def cleanBinary(self, qs):
-        for index, respondant in self.data.loc.iterrows():
+        for index, respondant in self.data.iterrows():
             self.index = index
             for q in qs:
                 self.q = q
@@ -52,11 +55,31 @@ class survey:
                     self.flagged.append([ str(index), str(q), self.data.loc[index,q]])
                 if str(self.data.loc[index,q]).lower() != tmp.lower():
                     self.changes.append("BINARY: Replaced " +  tmp + " with " + str(self.data.loc[index,q] + " at respondant" + str(self.data.loc[index,id]) + " question " + str(q)))
+    def inferLoc(self,value):
+        if self.possibleID(value):
+            return 1
+        if re.search("\d{4}",str(value)):
+            if self.data[self.idx,post] in SAC:
+               return "SAC" + value
+            elif self.data[self.idx,post] in LA:
+               return "LA" + value
+            elif self.data[self.idx,post] in SF:
+               return "SF" + value
+        return 0
+
     def cleanID(self):
         self.q = id
-        for index, respondant in self.data.loc.iterrows():
+        for index, respondant in self.data.iterrows():
             self.index = index
-            pass
+            tmp = self.data.loc[index, id]
+            nloc = self.inferLoc(respondant[id])
+            if self.possibleID(respondant[id], log=False) and nloc:
+                if nloc != tmp and nloc != 1:
+                    self.changes.append("ID: Replaced " + tmp + " with " +  nloc + " by infering location with zipcode " + respondant[post])
+                    self.data.loc[index,id] = nloc if nloc != 1 else tmp
+                else:
+                    self.data.loc[index, id] = ""
+                    self.changes.append("ID: Deleted " + tmp  + " because it is not a valid ID")
     def removeDirectDupes(self):
         tmp= self.data
         self.data = self.data.drop_duplicates()
@@ -67,6 +90,19 @@ class survey:
     def resolveIdDupes(self):
         dupes = self.data.duplicated(subset=[id], keep=False)
         print(self.data[dupes].sort_values(by=[id])[id])
+    def merge(self, other):
+        try:
+            self.data.merge(other.data, left_on=[id], right_on=[id], validate="1:1")
+        except:
+            print("Merge failed! Attempting to resolve collisions...")
+            self.attemptResolvebyMerge(other)
+    def attemptResolvebyMerge(self, other):
+        self.resolveIdDupes()
+        other.resolveIdDupes()
+        try:
+            self.data.merge(other.data, left_on=[id], right_on=[id], validate="1:1")
+        except:
+            print("fail")
     def write(self):
         self.data.compare(self.read).to_excel(self.name + "_diff.xlsx")
         self.data.to_excel(self.name + "_cleaned.xlsx")
