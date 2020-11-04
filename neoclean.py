@@ -46,11 +46,13 @@ class survey:
                 tmp = str(self.data.loc[index,q])
                 if self.possibleID(tmp):
                     continue
-                self.data.loc[index,q] = self.data.loc[index,q].lower()
-                if "no" in self.data.loc[index,q]:
+                self.data.loc[index,q] = str(self.data.loc[index,q]).lower()
+                if "no" in self.data.loc[index,q] or "desemplead" in self.data.loc[index,q]: # ask Laura abt this one or "voluntaria" in self.data.loc[index,q]:
                     self.data.loc[index,q] = "no"
-                if "sí" in self.data.loc[index,q] or "si" in self.data.loc[index,q]:
+                elif "sí" in self.data.loc[index,q] or "si" in self.data.loc[index,q] or "emplead" in self.data.loc[index,q]:
                     self.data.loc[index,q] = "si"
+                elif "voluntari" in self.data.loc[index,q]:
+                    self.data.loc[index,q]= "voluntaria"
                 else:
                     self.flagged.append([ str(index), str(q), self.data.loc[index,q]])
                 if str(self.data.loc[index,q]).lower() != tmp.lower():
@@ -84,12 +86,12 @@ class survey:
         tmp= self.data
         self.data = self.data.drop_duplicates()
         if not self.data.equals(tmp):
-            print(self.data.compare(tmp))
+            pass
         else:
             print("no direct duplicates!")
     def resolveIdDupes(self):
         dupes = self.data.duplicated(subset=[id], keep=False)
-        print(self.data[dupes].sort_values(by=[id])[id])
+        #print(self.data[dupes].sort_values(by=[id])[id])
     def merge(self, other):
         try:
             self.data.merge(other.data, left_on=[id], right_on=[id], validate="1:1")
