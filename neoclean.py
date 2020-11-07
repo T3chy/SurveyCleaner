@@ -1,8 +1,9 @@
+# ask Laura if she wants manual review if can't infer to resolve collisions
 import pandas as pd
 import re
 import math
 id = "Por favor complete con sus datos: - Número de identificación del estudio"
-pd.options.display.max_rows = 999
+#pd.options.display.max_rows = 999
 post = "Por favor complete con sus datos: - Código Postal"
 class survey:
     def __init__(self,name):
@@ -37,7 +38,7 @@ class survey:
                 else:
                     self.data.loc[index,q] = self.data.loc[index,q].replace("O", "0")
                     self.data.loc[index,q] = re.sub("\D", "", self.data.loc[index,q])
-                    self.changes.append("NUMERIC: Replaced " + tmp + " with " +  str(self.data.loc[index,q]) + " at respondant " + str(self.data.loc[index,id]) + " question " +  str(q))
+                    self.changes.append("NUMERIC: Replaced " + tmp + " with " +  str(self.data.loc[index,q]) + " at respondant " + str(self.data.loc[index,id]) + " question " +  str(q)) # maybe don't log just lowercasing
     def cleanBinary(self, qs):
         for index, respondant in self.data.iterrows():
             self.index = index
@@ -68,7 +69,6 @@ class survey:
             elif self.data[self.idx,post] in SF:
                return "SF" + value
         return 0
-
     def cleanID(self):
         self.q = id
         for index, respondant in self.data.iterrows():
@@ -89,18 +89,41 @@ class survey:
             pass
         else:
             print("no direct duplicates!")
-    def resolveIdDupes(self):
-        dupes = self.data.duplicated(subset=[id], keep=False)
-        #print(self.data[dupes].sort_values(by=[id])[id])
+    def resolveIdDupes(self, other=None):
+         dupes = self.data[self.data.duplicated(subset=[id], keep=False)].sort_values(by=[id])
+         try:
+             otherdupes = other[other.duplicated(subset=[id], keep=False)]
+             otherdupes = otherdupes.groupby(by=[id])
+         except:
+             otherdupes = -1
+         print(dupes[[id,post]])
+         group = []
+         tmp = ""
+         for idx, row in dupes.iterrows():
+            if row[id] == tmp or tmp == "":
+                pass
+            else:
+                print("dupez")
+                for dupe in group:
+                    print(dupe[id])
+                group = []
+            group.append(row)
+            tmp = row[id]
+         for dupe in group:
+            print(dupe[id])
+#        dupes = self.data.duplicated(subset=[id,post], keep=False)
+#        print(self.data[dupes].sort_values(by=[id])[id])
+        #for dupe in self.data[dupes]:
+        #@    print(dupe)
     def merge(self, other):
         try:
-            self.data.merge(other.data, left_on=[id], right_on=[id], validate="1:1")
+            self.data.merge(other.data, left_on=[id,post], right_on=[id,post], validate="1:1")
         except:
             print("Merge failed! Attempting to resolve collisions...")
             self.attemptResolvebyMerge(other)
     def attemptResolvebyMerge(self, other):
-        self.resolveIdDupes()
-        other.resolveIdDupes()
+        self.resolveIdDupes(other=other.data)
+        other.resolveIdDupes(other=self.data)
         try:
             self.data.merge(other.data, left_on=[id], right_on=[id], validate="1:1")
         except:
