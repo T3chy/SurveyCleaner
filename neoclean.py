@@ -90,7 +90,7 @@ class survey:
         else:
             print("no direct duplicates!")
     def getDupePairs(self, dupes):
-         pairs = []
+         pairs= []
          group = []
          tmp = ""
          for idx, row in dupes.iterrows():
@@ -118,6 +118,19 @@ class survey:
              for bruh in pair:
                  print("Respondant " + str(n) + ":")
                  print(bruh[id])
+                 n += 1
+             choice = "N"
+             while not isinstance(choice, int):
+                try:
+                    choice = int(input("Which respondant would you like to keep?"))
+                except:
+                    print("please input a number!")
+             n = 1
+             for bruh in pair:
+                 if n == choice:
+                     pass
+                 else:
+                     self.data = self.data.drop(self.data[self.data["Response ID"] == bruh["Response ID"]].index)
                  n += 1
     def merge(self, other):
         try:
