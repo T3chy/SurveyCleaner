@@ -1,4 +1,5 @@
 # ask Laura if she wants manual review if can't infer to resolve collisions
+import numpy as np
 import pandas as pd
 import re
 import math
@@ -92,46 +93,86 @@ class survey:
     def getDupePairs(self, dupes):
          pairs= []
          group = []
+         nans = []
          tmp = ""
          for idx, row in dupes.iterrows():
-            if row[id] == tmp or tmp == "":
-                pass
-            else:
-                pairs.append(group)
-                group = []
-            group.append(row)
-            tmp = row[id]
+             try:
+                 if math.isnan(float(row[id])):
+                     nans.append(row)
+             except:
+                if row[id] == tmp or tmp == "":
+                    pass
+                else:
+                    pairs.append(group)
+                    group = []
+                group.append(row)
+                tmp = row[id]
          pairs.append(group)
-         return pairs
+         return pairs, nans
     def resolveIdDupes(self, other=None):
          dupes = self.data[self.data.duplicated(subset=[id], keep=False)].sort_values(by=[id])
+         print(dupes[id])
          try:
              otherdupes = other[other.duplicated(subset=[id], keep=False)]
              otherdupes = otherdupes.groupby(by=[id])
          except:
              otherdupes = -1
-         pairs = self.getDupePairs(dupes)
-         for pair in pairs:
-             print("____________________________________________________________________________________")
-             print("Colliding id detected!")
-             n = 1
-             for bruh in pair:
-                 print("Respondant " + str(n) + ":")
-                 print(bruh[id])
-                 n += 1
-             choice = "N"
-             while not isinstance(choice, int):
-                try:
-                    choice = int(input("Which respondant would you like to keep?"))
-                except:
-                    print("please input a number!")
-             n = 1
-             for bruh in pair:
-                 if n == choice:
-                     pass
-                 else:
-                     self.data = self.data.drop(self.data[self.data["Response ID"] == bruh["Response ID"]].index)
-                 n += 1
+         pairs, nans = self.getDupePairs(dupes)
+         if pairs == [[]]:
+             print("No collisions detected!")
+         else:
+             for pair in pairs:
+                 print("____________________________________________________________________________________")
+                 print("Colliding id detected!")
+                 n = 1
+                 for bruh in pair:
+                     print("Respondant " + str(n) + ":")
+                     print(bruh[id])
+                     n += 1
+                 choice = "N"
+                 while not isinstance(choice, int):
+                    try:
+                        choice = int(input("Which respondant would you like to keep?\n"))
+                        if choice > len(pair):
+                            print("Please input a valid respondant number!")
+                            choice = "N"
+                    except:
+                        print("please input a number!")
+                 n = 1
+                 for bruh in pair:
+                     if n == choice:
+                         pass
+                     else:
+                         self.data = self.data.drop(self.data[self.data["Response ID"] == bruh["Response ID"]].index)
+                     n += 1
+         if not nans == []:
+             self.handlenanID(nans)
+
+    def handlenanID(self, nans):
+         print("____________________________________________________________________________________")
+         print("work in progress lol")
+         print("Colliding nan detected!")
+         n = 1
+         for bruh in nans:
+             print("Respondant " + str(n) + ":")
+             print(bruh[id])
+             n += 1
+         choice = "N"
+         while not isinstance(choice, int):
+            try:
+                choice = int(input("Which respondant would you like to keep?\n"))
+                if choice > len(nans):
+                    print("Please input a valid respondant number!")
+                    choice = "N"
+            except:
+                print("please input a number!")
+         n = 1
+         for bruh in nans:
+             if n == choice:
+                 pass
+             else:
+                 self.data = self.data.drop(self.data[self.data["Response ID"] == bruh["Response ID"]].index)
+
     def merge(self, other):
         try:
             self.data.merge(other.data, left_on=[id,post], right_on=[id,post], validate="1:1")
