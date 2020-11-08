@@ -4,7 +4,7 @@ import pandas as pd
 import re
 import math
 id = "Por favor complete con sus datos: - Número de identificación del estudio"
-#pd.options.display.max_rows = 999
+pd.options.display.max_rows = 999
 post = "Por favor complete con sus datos: - Código Postal"
 class survey:
     def __init__(self,name):
@@ -126,8 +126,9 @@ class survey:
                  print("Colliding id detected!")
                  n = 1
                  for bruh in pair:
+                     print("____________________________________________________________________________________")
                      print("Respondant " + str(n) + ":")
-                     print(bruh[id])
+                     print(bruh)
                      n += 1
                  choice = "N"
                  while not isinstance(choice, int):
@@ -176,6 +177,7 @@ class survey:
     def merge(self, other):
         try:
             self.data.merge(other.data, left_on=[id,post], right_on=[id,post], validate="1:1")
+            print("merged!")
         except:
             print("Merge failed! Attempting to resolve collisions...")
             self.attemptResolvebyMerge(other)
