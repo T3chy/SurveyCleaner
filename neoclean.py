@@ -89,6 +89,20 @@ class survey:
             pass
         else:
             print("no direct duplicates!")
+    def getDupePairs(self, dupes):
+         pairs = []
+         group = []
+         tmp = ""
+         for idx, row in dupes.iterrows():
+            if row[id] == tmp or tmp == "":
+                pass
+            else:
+                pairs.append(group)
+                group = []
+            group.append(row)
+            tmp = row[id]
+         pairs.append(group)
+         return pairs
     def resolveIdDupes(self, other=None):
          dupes = self.data[self.data.duplicated(subset=[id], keep=False)].sort_values(by=[id])
          try:
@@ -96,25 +110,15 @@ class survey:
              otherdupes = otherdupes.groupby(by=[id])
          except:
              otherdupes = -1
-         print(dupes[[id,post]])
-         group = []
-         tmp = ""
-         for idx, row in dupes.iterrows():
-            if row[id] == tmp or tmp == "":
-                pass
-            else:
-                print("dupez")
-                for dupe in group:
-                    print(dupe[id])
-                group = []
-            group.append(row)
-            tmp = row[id]
-         for dupe in group:
-            print(dupe[id])
-#        dupes = self.data.duplicated(subset=[id,post], keep=False)
-#        print(self.data[dupes].sort_values(by=[id])[id])
-        #for dupe in self.data[dupes]:
-        #@    print(dupe)
+         pairs = self.getDupePairs(dupes)
+         for pair in pairs:
+             print("____________________________________________________________________________________")
+             print("Colliding id detected!")
+             n = 1
+             for bruh in pair:
+                 print("Respondant " + str(n) + ":")
+                 print(bruh[id])
+                 n += 1
     def merge(self, other):
         try:
             self.data.merge(other.data, left_on=[id,post], right_on=[id,post], validate="1:1")
