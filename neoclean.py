@@ -1,11 +1,10 @@
-# ask Laura if she wants manual review if can't infer to resolve collisions
 import numpy as np
 import pandas as pd
 import re
 import math
 id = "Por favor complete con sus datos: - Número de identificación del estudio"
-pd.options.display.max_rows = 999
 post = "Por favor complete con sus datos: - Código Postal"
+pd.options.display.max_rows = 999
 class survey:
     def __init__(self,name):
         self.name = name.strip(".xlsx")
@@ -74,7 +73,7 @@ class survey:
         self.q = id
         for index, respondant in self.data.iterrows():
             self.index = index
-            tmp = self.data.loc[index, id]
+            tmp = self.data.loc[index, id].upper()
             nloc = self.inferLoc(respondant[id])
             if self.possibleID(respondant[id], log=False) and nloc:
                 if nloc != tmp and nloc != 1:
@@ -97,7 +96,7 @@ class survey:
          tmp = ""
          for idx, row in dupes.iterrows():
              try:
-                 if math.isnan(float(row[id])):
+                 if math.isnan(float(row[id])) or row[id] == "NaN":
                      nans.append(row)
              except:
                 if row[id] == tmp or tmp == "":
@@ -118,41 +117,44 @@ class survey:
          except:
              otherdupes = -1
          pairs, nans = self.getDupePairs(dupes)
-         if pairs == [[]]:
+         if pairs == [[]] and nans == []:
              print("No collisions detected!")
          else:
-             for pair in pairs:
-                 print("____________________________________________________________________________________")
-                 print("Colliding id detected!")
-                 n = 1
-                 for bruh in pair:
-                     print("____________________________________________________________________________________")
-                     print("Respondant " + str(n) + ":")
-                     print(bruh)
-                     n += 1
-                 choice = "N"
-                 while not isinstance(choice, int):
-                    try:
-                        choice = int(input("Which respondant would you like to keep?\n"))
-                        if choice > len(pair):
-                            print("Please input a valid respondant number!")
-                            choice = "N"
-                    except:
-                        print("please input a number!")
-                 n = 1
-                 for bruh in pair:
-                     if n == choice:
-                         pass
-                     else:
-                         self.data = self.data.drop(self.data[self.data["Response ID"] == bruh["Response ID"]].index)
-                     n += 1
-         if not nans == []:
-             self.handlenanID(nans)
-
+             choice = input(str(len(pairs)) + " duplicate pair(s) detected! Would you like to resolve them here? [y/N]\n")
+             if choice.lower() == "y" or choice.lower() == "yes":
+                 if pairs != [[]]:
+                     for pair in pairs:
+                         print("____________________________________________________________________________________")
+                         print("Colliding id detected!")
+                         n = 1
+                         for bruh in pair:
+                             print("____________________________________________________________________________________")
+                             print("Respondant " + str(n) + ":")
+                             print(bruh)
+                             n += 1
+                         choice = "N"
+                         while not isinstance(choice, int):
+                            try:
+                                choice = int(input("Which respondant would you like to keep?\n"))
+                                if choice > len(pair):
+                                    print("Please input a valid respondant number!")
+                                    choice = "N"
+                            except:
+                                print("please input a number!")
+                         n = 1
+                         for bruh in pair:
+                             if n == choice:
+                                 pass
+                             else:
+                                 self.data = self.data.drop(self.data[self.data["Response ID"] == bruh["Response ID"]].index)
+                             n += 1
+                 if not nans == []:
+                     self.handlenanID(nans)
+             else:
+                print("ok! Please resolve them in the original input xlsx, and rerun this script!")
     def handlenanID(self, nans):
          print("____________________________________________________________________________________")
-         print("work in progress lol")
-         print("Colliding nan detected!")
+         print(str(len(nans)) + " nan ids detected!")
          n = 1
          for bruh in nans:
              print("Respondant " + str(n) + ":")
@@ -173,7 +175,7 @@ class survey:
                  pass
              else:
                  self.data = self.data.drop(self.data[self.data["Response ID"] == bruh["Response ID"]].index)
-
+             n += 1
     def merge(self, other):
         try:
             self.data.merge(other.data, left_on=[id,post], right_on=[id,post], validate="1:1")
