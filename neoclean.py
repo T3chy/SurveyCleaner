@@ -5,10 +5,14 @@ import math
 id = "Por favor complete con sus datos: - Número de identificación del estudio"
 post = "Por favor complete con sus datos: - Código Postal"
 pd.options.display.max_rows = 999
+surveyDefaultBinaryQs = ["QID81 - ¿Está empleada/o actualmente?", "¿Sabe Usted lo que son las pruebas genéticas?", "¿Te has hecho una prueba genética alguna vez?", "Exámen de seno / Mamografía", "Exámen cervical / Papanicolao", "Exámen colorectal / Colonoscopía"]
+surveyDefaultNumericQs = ["Por favor complete con sus datos: - Edad", "QID73 - ¿Hace cuántos años vive en los Estados Unidos?", "QID80 - ¿Cuántas personas viven con Usted?"]
+
 class survey:
     def __init__(self,name):
         self.name = name.strip(".xlsx")
         self.read = pd.read_excel(name)
+        self.merged = ""
         self.data = self.read.copy()
         self.changes = []
         self.flagged = []
@@ -109,6 +113,7 @@ class survey:
          pairs.append(group)
          return pairs, nans
     def resolveIdDupes(self, other=None):
+         self.removeDirectDupes()
          dupes = self.data[self.data.duplicated(subset=[id], keep=False)].sort_values(by=[id])
          print(dupes[id])
          try:
@@ -120,45 +125,49 @@ class survey:
          if pairs == [[]] and nans == []:
              print("No collisions detected!")
          else:
-             choice = input(str(len(pairs)) + " duplicate pair(s) detected! Would you like to resolve them here? [y/N]\n")
-             if choice.lower() == "y" or choice.lower() == "yes":
-                 if pairs != [[]]:
-                     for pair in pairs:
-                         print("____________________________________________________________________________________")
-                         print("Colliding id detected!")
-                         n = 1
-                         for bruh in pair:
-                             print("____________________________________________________________________________________")
-                             print("Respondant " + str(n) + ":")
-                             print(bruh)
-                             n += 1
-                         choice = "N"
-                         while not isinstance(choice, int):
-                            try:
-                                choice = int(input("Which respondant would you like to keep?\n"))
-                                if choice > len(pair):
-                                    print("Please input a valid respondant number!")
-                                    choice = "N"
-                            except:
-                                print("please input a number!")
-                         n = 1
-                         for bruh in pair:
-                             if n == choice:
-                                 pass
-                             else:
-                                 self.data = self.data.drop(self.data[self.data["Response ID"] == bruh["Response ID"]].index)
-                             n += 1
-                 if not nans == []:
-                     self.handlenanID(nans)
+             if True:
+                dupes.to_excel(self.name + "_collisions.xlsx")
+                print("Collisions written to " + self.name + "_collisions.xlsx")
              else:
-                print("ok! Please resolve them in the original input xlsx, and rerun this script!")
+                 choice = input(str(len(pairs)) + " duplicate pair(s) detected! Would you like to resolve them here? [y/N]\n")
+                 if choice.lower() == "y" or choice.lower() == "yes":
+                     if pairs != [[]]:
+                         for pair in pairs:
+                             print("____________________________________________________________________________________")
+                             print("Colliding id detected!")
+                             n = 1
+                             for bruh in pair:
+                                 print("____________________________________________________________________________________")
+                                 print("Respondant " + str(n) + ":")
+                                 print(bruh)
+                                 n += 1
+                             choice = "N"
+                             while not isinstance(choice, int):
+                                try:
+                                    choice = int(input("Which respondant would you like to keep?\n"))
+                                    if choice > len(pair):
+                                        print("Please input a valid respondant number!")
+                                        choice = "N"
+                                except:
+                                    print("please input a number!")
+                             n = 1
+                             for bruh in pair:
+                                 if n == choice:
+                                     pass
+                                 else:
+                                     self.data = self.data.drop(self.data[self.data["Response ID"] == bruh["Response ID"]].index)
+                                 n += 1
+                     if not nans == []:
+                         self.handlenanID(nans)
+                 else:
+                    print("ok! Please resolve them in the original input xlsx, and rerun this script!")
     def handlenanID(self, nans):
          print("____________________________________________________________________________________")
          print(str(len(nans)) + " nan ids detected!")
          n = 1
          for bruh in nans:
              print("Respondant " + str(n) + ":")
-             print(bruh[id])
+             print(bruh)
              n += 1
          choice = "N"
          while not isinstance(choice, int):
@@ -178,7 +187,7 @@ class survey:
              n += 1
     def merge(self, other):
         try:
-            self.data.merge(other.data, left_on=[id,post], right_on=[id,post], validate="1:1")
+            self.merged = self.data.merge(other.data, left_on=[id,post], right_on=[id,post], validate="1:1")
             print("merged!")
         except:
             print("Merge failed! Attempting to resolve collisions...")
@@ -191,10 +200,16 @@ class survey:
         except:
             print("fail")
     def write(self):
-        self.data.compare(self.read).to_excel(self.name + "_diff.xlsx")
+        #self.data.compare(self.read).to_excel(self.name + "_diff.xlsx")
         self.data.to_excel(self.name + "_cleaned.xlsx")
+        self.merged.to_excel(self.name + "_merged.xlsx")
         pd.DataFrame(self.flagged,columns=["Respondant", "question", "value"]).to_excel(self.name + "_flagged.xlsx")
         with open(self.name + "_changes.txt", "w") as f:
             for change in self.changes:
                 f.write(change)
                 f.write("\n")
+    def theWorks(self):
+        self.cleanBinary(surveyDefaultBinaryQs)
+        self.cleanNumeric(surveyDefaultNumericQs)
+        self.removeDirectDupes()
+        self.resolveIdDupes()
