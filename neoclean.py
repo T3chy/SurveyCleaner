@@ -1,3 +1,4 @@
+from datetime import datetime as dt
 import numpy as np
 import pandas as pd
 import re
@@ -88,7 +89,7 @@ class survey:
                     self.changes.append("ID: Deleted " + tmp  + " because it is not a valid ID")
     def removeDirectDupes(self):
         tmp= self.data
-        self.data = self.data.drop_duplicates()
+        self.data = self.data.drop_duplicates(b.columns.difference(["Response ID", "Duration (in seconds)", "Unnamed: 0", "Recorded Date", "Start Date", "End Date"]))
         if not self.data.equals(tmp):
             pass
         else:
@@ -112,10 +113,31 @@ class survey:
                 tmp = row[id]
          pairs.append(group)
          return pairs, nans
+    def resolveRedoes(self): # todo fix it it doesn't work lol
+        dupes = self.data[self.data.duplicated(subset=[id, "IP Address"], keep=False)]
+        print(dupes)
+        pairs, nans = self.getDupePairs(dupes)
+        for pair in pairs:
+            idx = 0
+            latest = 0
+            best = pair[0]
+            for b in pair:
+                #if dt.strptime(str(b["End Date"]), "%Y-%m-%d %H:%M:%S") > dt.strptime(str(best["End Date"],"%Y-%m-%d %H:%M:%S")):
+                if b["End Date"] > best["End Date"]:
+                    latest = idx
+                    best = b[idx]
+                idx += 1
+            n = 0
+            for bruh in pair:
+                if n == latest:
+                    pass
+                else:
+                    self.data = self.data.drop(self.data[self.data == bruh].index)
+                n += 1
+
     def resolveIdDupes(self, other=None):
          self.removeDirectDupes()
          dupes = self.data[self.data.duplicated(subset=[id], keep=False)].sort_values(by=[id])
-         print(dupes[id])
          try:
              otherdupes = other[other.duplicated(subset=[id], keep=False)]
              otherdupes = otherdupes.groupby(by=[id])
@@ -202,7 +224,8 @@ class survey:
     def write(self):
         #self.data.compare(self.read).to_excel(self.name + "_diff.xlsx")
         self.data.to_excel(self.name + "_cleaned.xlsx")
-        self.merged.to_excel(self.name + "_merged.xlsx")
+        if self.merged != "":
+            self.merged.to_excel(self.name + "_merged.xlsx")
         pd.DataFrame(self.flagged,columns=["Respondant", "question", "value"]).to_excel(self.name + "_flagged.xlsx")
         with open(self.name + "_changes.txt", "w") as f:
             for change in self.changes:
