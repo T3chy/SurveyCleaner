@@ -19,13 +19,13 @@ class survey:
         self.flagged = []
         self.index = 0
         self.q = ""
-    def logChange(qtype, init, index, q, reason=""):
+    def logChange(self, qtype, init, index, q, reason=""):
         final = self.data.loc[index,q]
         rid = self.data.loc[index,id]
         if final == "":
             final = "an empty string"
-        if str(init).lower() != str(final).lower():
-            self.changes.append(str(qtype).upper() + ": Replaced " + str(init) + " with " + str(final) + " at respondant with ID " + str(rid) " question " + str(q) + " " + reason)
+        if str(init).lower().strip("'") != str(final).lower().strip("'"):
+            self.changes.append(str(qtype).upper() + ": Replaced " + str(init) + " with " + str(final) + " at respondant with ID " + str(rid)+ " question " + str(q) + " " + reason)
 
     def possibleID(self,tmp, log=True):
         if re.search("[A-Z].*?\d{4}", str(tmp)):
@@ -47,7 +47,7 @@ class survey:
         else:
             self.data.loc[index,q] = self.data.loc[index,q].replace("O", "0")
             self.data.loc[index,q] = re.sub("\D", "", self.data.loc[index,q])
-        logChange("numeric", tmp, index, q)
+        self.logChange("numeric", tmp, index, q)
     def cleanBinary(self, q, index):
         self.index = index
         self.q = q
@@ -63,7 +63,7 @@ class survey:
             self.data.loc[index,q]= "voluntaria"
         else:
             self.flagged.append([ str(index), str(q), self.data.loc[index,q]])
-        logChange("binary", tmp, index, q)
+        self.logChange("binary", tmp, index, q)
     def inferLoc(self,value):
         if self.possibleID(value):
             return 1
@@ -211,14 +211,26 @@ class survey:
             self.data.merge(other.data, left_on=[id], right_on=[id], validate="1:1")
         except:
             print("fail")
+    def cleanColumn(self, dtype, colname=""):
+        if dtype.lower() == "binary":
+            for idx, row in self.data.iterrows():
+                self.cleanBinary(colname, idx)
+        elif dtype.lower() == "numeric":
+            for idx, row in self.data.iterrows():
+                self.cleanNumeric(colname, idx)
+        elif dtype.lower() == "id":
+            for idx, row in self.data.iterrows():
+                self.cleanID(idx)
+        else:
+            print("Sorry! " + dtype + " is not a valid datatype. Please enter either binary, numeric, or id")
     def write(self):
-        #self.data.compare(self.read).to_excel(self.name + "_diff.xlsx")
+        self.data.compare(self.read).to_excel(self.name + "_diff.xlsx")
         self.data.to_excel(self.name + "_cleaned.xlsx")
         if self.merged != "":
             self.merged.to_excel(self.name + "_merged.xlsx")
         if self.flagged != "":
             pd.DataFrame(self.flagged,columns=["Respondant", "question", "value"]).to_excel(self.name + "_flagged.xlsx")
-        if selfchanges != []:
+        if self.changes != []:
             with open(self.name + "_changes.txt", "w") as f:
                 for change in self.changes:
                     f.write(change)
