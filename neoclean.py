@@ -1,8 +1,8 @@
 from datetime import datetime as dt
-import numpy as np
-import pandas as pd
 import re
 import math
+import numpy as np
+import pandas as pd
 id = "Por favor complete con sus datos: - Número de identificación del estudio"
 post = "Por favor complete con sus datos: - Código Postal"
 pd.options.display.max_rows = 999
@@ -19,26 +19,28 @@ class survey:
         self.flagged = []
         self.index = 0
         self.q = ""
-    def logChange(self, qtype, init, index, q, reason=""):
-        final = self.data.loc[index,q]
-        rid = self.data.loc[index,id]
-        if final == "":
-            final = "an empty string"
+    def logChange(self, qtype, init, reason=""):
+        final = self.data.loc[self.index,self.q]
+        rid = self.data.loc[self.index,self.id]
         if str(init).lower().strip("'") != str(final).lower().strip("'"):
+            if final == "":
+                final = "an empty string"
             self.changes.append(str(qtype).upper() + ": Replaced " + str(init) + " with " + str(final) + " at respondant with ID " + str(rid)+ " question " + str(q) + " " + reason)
 
-    def possibleID(self,tmp, log=True):
-        if re.search("[A-Z].*?\d{4}", str(tmp)):
+    def validID(self,tmp, log=True):
+        if re.search("[a-zA-Z]{2,3}\d{4}", str(tmp)):
             if log:
-                self.flagged.append(["POSSIBLE ID FOUND: " + str(tmp), "respondant # " + str(self.index), str(self.q)])
+                flag("Possible ID")
             return 1
         else:
             return 0
+    def flag(self, reason="invalid"):
+        self.flagged.append([self.index, self.q, self.data.loc[self.index, self.q, reason])
     def cleanNumeric(self, q, index):
         self.index = index
         self.q = q
         tmp = self.data.loc[index,q]
-        if self.possibleID(tmp):
+        if self.validID(tmp):
             return
         elif isinstance(tmp, float) or isinstance(tmp, int) or str(tmp).isnumeric():
             return
@@ -47,46 +49,46 @@ class survey:
         else:
             self.data.loc[index,q] = self.data.loc[index,q].replace("O", "0")
             self.data.loc[index,q] = re.sub("\D", "", self.data.loc[index,q])
-        self.logChange("numeric", tmp, index, q)
+        self.logChange("numeric", tmp)
+    def standardizeEmployment(self, q, index):
+        pass # list of different ways of saying a general category of job
     def cleanBinary(self, q, index):
         self.index = index
         self.q = q
         tmp = str(self.data.loc[index,q])
-        if self.possibleID(tmp):
+        if self.validID(tmp):
             return
         self.data.loc[index,q] = str(self.data.loc[index,q]).lower()
-        if "no" in self.data.loc[index,q] or "desemplead" in self.data.loc[index,q]: # ask Laura abt this one or "voluntaria" in self.data.loc[index,q]:
+        if "no" in self.data.loc[index,q] or "desemplead" in self.data.loc[index,q] or "retirada" in self.data.loc[index,q] or "voluntari" in self.data.loc[index,q]: # check next col to see what job is, if none then no
             self.data.loc[index,q] = "no"
         elif "sí" in self.data.loc[index,q] or "si" in self.data.loc[index,q] or "emplead" in self.data.loc[index,q]:
             self.data.loc[index,q] = "si"
-        elif "voluntari" in self.data.loc[index,q]:
-            self.data.loc[index,q]= "voluntaria"
         else:
-            self.flagged.append([ str(index), str(q), self.data.loc[index,q]])
-        self.logChange("binary", tmp, index, q)
-    def inferLoc(self,value):
-        if self.possibleID(value):
-            return 1
-        if re.search("\d{4}",str(value)):
-            if self.data[self.idx,post] in SAC:
-               return "SAC" + value
-            elif self.data[self.idx,post] in LA:
-               return "LA" + value
-            elif self.data[self.idx,post] in SF:
-               return "SF" + value
+            flag()
+        self.logChange("binary", tmp)
+    def inferLoc(self,value): # do as suggestion- maybe write to a new suggestion file
         return 0
-    def cleanID(self, index):
+    #     if self.validID(value):
+    #         return 1
+    #     if re.search("\d{4}",str(value)):
+    #         if self.data[self.idx,post] in SAC:
+    #             return "SAC" + value
+    #         elif self.data[self.idx,post] in LA:
+    #            return "LA" + value
+    #         elif self.data[self.idx,post] in SF:
+    #            return "SF" + value
+    #     return 0
+    def cleanID(self, index): # fix pls
         self.index = index
-        self.q = q
-        tmp = self.data.loc[index, id].upper()
-        nloc = self.inferLoc(respondant[id])
-        if self.possibleID(respondant[id], log=False) and nloc:
-            if nloc != tmp and nloc != 1:
-                self.changes.append("ID: Replaced " + tmp + " with " +  nloc + " by infering location with zipcode " + respondant[post])
-                self.data.loc[index,id] = nloc if nloc != 1 else tmp
-            else:
-                self.data.loc[index, id] = ""
-                self.changes.append("ID: Deleted " + tmp  + " because it is not a valid ID")
+        self.q "id"
+        tmp = self.data.loc[index, id].upper().strip(" ")
+        # regex out the id- there might be trailing- prefix wrods
+        nloc = ""
+        try:
+            self.data.loc[index, id] = re.find("[a-zA-Z]{2,3}\d{4}").groups(0)
+        except:
+            flag()
+        self.logChange("id", tmp)
     def removeDirectDupes(self):
         tmp= self.data
         self.data = self.data.drop_duplicates(b.columns.difference(["Response ID", "Duration (in seconds)", "Unnamed: 0", "Recorded Date", "Start Date", "End Date"]))
@@ -107,11 +109,10 @@ class survey:
                 else:
                     pairs.append(group)
                     group = []
-                group.append(row)
                 tmp = row[id]
          pairs.append(group)
          return pairs, nans
-    def resolveRedoes(self): # todo fix it it doesn't work lol
+    def resolveRedoes(self): # just falg don't delete- deleting is bad when autmated cuz we don't rly know what it is
         dupes = self.data[self.data.duplicated(subset=[id, "IP Address"], keep=False)]
         print(dupes)
         pairs, nans = self.getDupePairs(dupes)
@@ -133,14 +134,14 @@ class survey:
                     self.data = self.data.drop(self.data[self.data == bruh].index)
                 n += 1
 
-    def resolveIdDupes(self, other=None):
+    def resolveIdDupes(self):
          self.removeDirectDupes()
          dupes = self.data[self.data.duplicated(subset=[id], keep=False)].sort_values(by=[id])
          pairs, nans = self.getDupePairs(dupes)
          if pairs == [[]] and nans == []:
              print("No collisions detected!")
          else:
-             if True:
+             if True: # currently just writing out collisions- not sure what Laura wants to do w resolving em
                 dupes.to_excel(self.name + "_collisions.xlsx")
                 print("Collisions written to " + self.name + "_collisions.xlsx")
              else:
@@ -233,4 +234,5 @@ class survey:
         if self.changes != []:
             with open(self.name + "_changes.txt", "w") as f:
                 for change in self.changes:
+                    f.write("\n")
                     f.write(change)
