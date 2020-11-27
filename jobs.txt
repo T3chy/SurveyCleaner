@@ -1,0 +1,114 @@
+no job:
+	No tengo trabajo
+	Ninguno
+	no tengo
+	No tengo ahora
+	Estoy retirada  // this person said "yes" to being employed, though
+	Estoy desempleada
+	N/A
+	0
+childcare:
+	Cuidado do bebes
+	cuidar nenes
+	babysitter
+	Cuidadora de niños
+	Nani //nany?
+	Cuido Niño en la escuela
+food service:
+	cosina
+	buser
+	Cajera en comida rápida
+	food runner
+	resturante // waiter?
+	Trabajaba en restaurant
+	MAC DONAL
+	Cosinera
+	En placamos tostadas
+	Subway
+	Empleada de cardenas market
+	Bodega
+trades / skilled labor:
+	carpinteria
+	artista
+	detillar // demo person?
+	Medical Assistant
+	Hago documentales independientes
+	Operadora de máquina
+unskilled:
+	Empaque
+	Guardi de seguridad
+	Ayudante limpiesa
+	Limpieza de casas
+	Limpieza casas
+	repartidor
+	Promotora
+	Cajera
+	Cashier
+	HOUSEKEEPE
+	Campus  Supervisor // I think this is similar to security?
+	trimming // lawns? hair?
+	Dula // farming?
+	Retail
+	Promotora de Vivienda
+	Jardinera
+	Abogacia // assuming this doesn't mean therapist?
+	vendedora // border of unskilled -> white collar
+	EMPLEADA DEL CAMPO
+	Promotora Comunitaria
+	Promotor Comunitario
+	Community health promoter
+	oficina/ limpieza
+	Estilista // I don't think this is credentialed
+	Promotora de salud  // I don't think community health workers are credentialed?
+	Promotora de salud comunitaria
+	Hostess/ promotora de salud
+homemaker(for own family):
+	Ayuda en casa
+	Cuidado de niños en casa
+	Housekeeping
+	soy ama de casa
+	Limpiesa // clean at home? clean for work?
+	hogar
+	en casa
+	ama de casa
+	Cuido a mi hijos
+	Cuidar mis niños
+	Housewife
+	casa
+	provedora // unless medical provider was implied?
+	Staying home mom
+	Mi hogar y cuidado de mi hijo pequeño que si condición es Síndrome de Down
+	CAREGIVER
+	Cuidadora
+assistant/secretary kinda ones:
+	Office assistant
+	agente // this one might be white-collar? needs more context
+	Bank Teller
+	Officina // context required
+	Cordinadora de Programs de la Tercera Edad // this might be white-collar
+	Customer service’s
+credentialed jobs:
+	Teacher
+	Cosmetologa
+
+white-collar:
+	publicidad // advertising?
+	Realtor
+	Mercadeo y publicidad
+	Manager
+	spervisor // ???
+	agente independie
+	Legal Clerck
+volunteer:
+	Voluntario
+	Trabajo voluntario
+	Promotora de vivienda, del voto y ayudando en el food pantry
+	Trabajo voluntario comunitario
+????:
+	están recostados sobre el pasto que dejaran desparramado los hombres encargados de la empacadora cuando abandonaron el trabajo
+	Relief // therapist? emergency responder?
+	NIÑERA  // baby sister? babysitter?
+	Independiente
+	Fue empacadora // they put "no" to are you employed
+student:
+	Estudiante
