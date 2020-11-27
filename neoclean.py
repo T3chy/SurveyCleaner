@@ -3,12 +3,14 @@ import re
 import math
 import numpy as np
 import pandas as pd
-id = "Por favor complete con sus datos: - Número de identificación del estudio"
-post = "Por favor complete con sus datos: - Código Postal"
+import parsejobs
 pd.options.display.max_rows = 999
 surveyDefaultBinaryQs = ["QID81 - ¿Está empleada/o actualmente?", "¿Sabe Usted lo que son las pruebas genéticas?", "¿Te has hecho una prueba genética alguna vez?", "Exámen de seno / Mamografía", "Exámen cervical / Papanicolao", "Exámen colorectal / Colonoscopía"]
 surveyDefaultNumericQs = ["Por favor complete con sus datos: - Edad", "QID73 - ¿Hace cuántos años vive en los Estados Unidos?", "QID80 - ¿Cuántas personas viven con Usted?"]
+id = "Por favor complete con sus datos: - Número de identificación del estudio"
+post = "Por favor complete con sus datos: - Código Postal"
 
+jobs = parsejobs.parseJobsTxt("jobs.txt")
 class survey:
     def __init__(self,name):
         self.name = name.strip(".xlsx")
@@ -21,21 +23,21 @@ class survey:
         self.q = ""
     def logChange(self, qtype, init, reason=""):
         final = self.data.loc[self.index,self.q]
-        rid = self.data.loc[self.index,self.id]
+        rid = self.data.loc[self.index,id]
         if str(init).lower().strip("'") != str(final).lower().strip("'"):
             if final == "":
                 final = "an empty string"
-            self.changes.append(str(qtype).upper() + ": Replaced " + str(init) + " with " + str(final) + " at respondant with ID " + str(rid)+ " question " + str(q) + " " + reason)
+            self.changes.append(str(qtype).upper() + ": Replaced " + str(init) + " with " + str(final) + " at respondant with ID " + str(rid)+ " question " + str(init) + " " + reason)
 
     def validID(self,tmp, log=True):
         if re.search("[a-zA-Z]{2,3}\d{4}", str(tmp)):
             if log:
-                flag("Possible ID")
+                self.flag("Possible ID")
             return 1
         else:
             return 0
     def flag(self, reason="invalid"):
-        self.flagged.append([self.index, self.q, self.data.loc[self.index, self.q, reason])
+        self.flagged.append([self.index, self.q, self.data.loc[self.index, self.q], reason])
     def cleanNumeric(self, q, index):
         self.index = index
         self.q = q
@@ -51,7 +53,11 @@ class survey:
             self.data.loc[index,q] = re.sub("\D", "", self.data.loc[index,q])
         self.logChange("numeric", tmp)
     def standardizeEmployment(self, q, index):
-        pass # list of different ways of saying a general category of job
+        for job in jobs:
+            if self.data.loc[index,q] in job[1]:
+                self.data.loc[index,q] = job[0]
+                return 0
+        return 1
     def cleanBinary(self, q, index):
         self.index = index
         self.q = q
@@ -64,7 +70,7 @@ class survey:
         elif "sí" in self.data.loc[index,q] or "si" in self.data.loc[index,q] or "emplead" in self.data.loc[index,q]:
             self.data.loc[index,q] = "si"
         else:
-            flag()
+            self.flag()
         self.logChange("binary", tmp)
     def inferLoc(self,value): # do as suggestion- maybe write to a new suggestion file
         return 0
@@ -80,14 +86,13 @@ class survey:
     #     return 0
     def cleanID(self, index): # fix pls
         self.index = index
-        self.q "id"
+        self.q =  "id"
         tmp = self.data.loc[index, id].upper().strip(" ")
-        # regex out the id- there might be trailing- prefix wrods
         nloc = ""
         try:
             self.data.loc[index, id] = re.find("[a-zA-Z]{2,3}\d{4}").groups(0)
         except:
-            flag()
+            self.flag()
         self.logChange("id", tmp)
     def removeDirectDupes(self):
         tmp= self.data
@@ -222,6 +227,9 @@ class survey:
         elif dtype.lower() == "id":
             for idx, row in self.data.iterrows():
                 self.cleanID(idx)
+        elif dtype.lower() == "job":
+            for idx, row in self.data.iterrows():
+                self.standardizeEmployment(colname, idx)
         else:
             print("Sorry! " + dtype + " is not a valid datatype. Please enter either binary, numeric, or id")
     def write(self):
