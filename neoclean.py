@@ -53,11 +53,14 @@ class survey:
             self.data.loc[index,q] = re.sub("\D", "", self.data.loc[index,q])
         self.logChange("numeric", tmp)
     def standardizeEmployment(self, q, index, employedq="QID81 - ¿Está empleada/o actualmente?"):
+        modifier = ""
+        end = ""
         for job in jobs:
             if str(self.data.loc[index,employedq]).lower().strip() == "no":
-                self.data.loc[index,q] = "no job"
-            elif str(self.data.loc[index,q]).lower().strip() in job[1]:
-                self.data.loc[index,q] = job[0]
+                modifier =  "no ("
+                end = ")"
+            if str(self.data.loc[index,q]).lower().strip() in job[1]: # keeps the thing they put in, but puts it in brackets after "no" if they said "no" to "are you employed"
+                self.data.loc[index,q] = modifier + job[0] + end
                 return 0
         return 1
     def cleanBinary(self, q, index):
