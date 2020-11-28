@@ -52,9 +52,11 @@ class survey:
             self.data.loc[index,q] = self.data.loc[index,q].replace("O", "0")
             self.data.loc[index,q] = re.sub("\D", "", self.data.loc[index,q])
         self.logChange("numeric", tmp)
-    def standardizeEmployment(self, q, index):
+    def standardizeEmployment(self, q, index, employedq="QID81 - ¿Está empleada/o actualmente?"):
         for job in jobs:
-            if self.data.loc[index,q] in job[1]:
+            if str(self.data.loc[index,employedq]).lower().strip() == "no":
+                self.data.loc[index,q] = "no job"
+            elif str(self.data.loc[index,q]).lower().strip() in job[1]:
                 self.data.loc[index,q] = job[0]
                 return 0
         return 1
@@ -238,7 +240,7 @@ class survey:
         if self.merged != "":
             self.merged.to_excel(self.name + "_merged.xlsx")
         if self.flagged != "":
-            pd.DataFrame(self.flagged,columns=["Respondant", "question", "value"]).to_excel(self.name + "_flagged.xlsx")
+            pd.DataFrame(self.flagged,columns=["index", "question", "value", "reason(optional)"]).to_excel(self.name + "_flagged.xlsx")
         if self.changes != []:
             with open(self.name + "_changes.txt", "w") as f:
                 for change in self.changes:
