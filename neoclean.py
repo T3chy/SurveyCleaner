@@ -53,14 +53,12 @@ class survey:
             self.data.loc[index,q] = re.sub("\D", "", self.data.loc[index,q])
         self.logChange("numeric", tmp)
     def standardizeEmployment(self, q, index, employedq="QID81 - ¿Está empleada/o actualmente?"):
-        modifier = ""
-        end = ""
         for job in jobs:
             if str(self.data.loc[index,employedq]).lower().strip() == "no":
-                modifier =  "no ("
-                end = ")"
-            if str(self.data.loc[index,q]).lower().strip() in job[1]: # keeps the thing they put in, but puts it in brackets after "no" if they said "no" to "are you employed"
-                self.data.loc[index,q] = modifier + job[0] + end
+                self.data.loc[index,q] = "no (" + str(self.data.loc[index,q]) + ")"
+                return 0
+            elif str(self.data.loc[index,q]).lower().strip() in job[1]: # keeps the thing they put in, but puts it in brackets after "no" if they said "no" to "are you employed"
+                self.data.loc[index,q] = job[0]
                 return 0
         return 1
     def cleanBinary(self, q, index):
@@ -77,25 +75,13 @@ class survey:
         else:
             self.flag()
         self.logChange("binary", tmp)
-    def inferLoc(self,value): # do as suggestion- maybe write to a new suggestion file
-        return 0
-    #     if self.validID(value):
-    #         return 1
-    #     if re.search("\d{4}",str(value)):
-    #         if self.data[self.idx,post] in SAC:
-    #             return "SAC" + value
-    #         elif self.data[self.idx,post] in LA:
-    #            return "LA" + value
-    #         elif self.data[self.idx,post] in SF:
-    #            return "SF" + value
-    #     return 0
     def cleanID(self, index): # fix pls
         self.index = index
-        self.q =  "id"
-        tmp = self.data.loc[index, id].upper().strip(" ")
+        self.q =  id
+        tmp = str(self.data.loc[index, id]).upper().strip(" ")
         nloc = ""
         try:
-            self.data.loc[index, id] = re.find("[a-zA-Z]{2,3}\d{4}").groups(0)
+            self.data.loc[index, id] = re.search(tmp, "[a-zA-Z]{2,3}\d{4}").groups(0)
         except:
             self.flag()
         self.logChange("id", tmp)
@@ -122,7 +108,7 @@ class survey:
                 tmp = row[id]
          pairs.append(group)
          return pairs, nans
-    def resolveRedoes(self): # just falg don't delete- deleting is bad when autmated cuz we don't rly know what it is
+    def ResolveRedoes(self): # just falg don't delete- deleting is bad when autmated cuz we don't rly know what it is
         dupes = self.data[self.data.duplicated(subset=[id, "IP Address"], keep=False)]
         print(dupes)
         pairs, nans = self.getDupePairs(dupes)
