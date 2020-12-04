@@ -10,6 +10,10 @@ def parseJobsTxt(txtfile):
             jobtitle = line.strip("\n").strip(":")
             thisjob = []
         else:
-            thisjob.append(re.sub("\/\/.*", "", line.strip("\n").strip("\t")))
+            try:
+                thisjob.append(re.sub("\/\/.*", "", line.strip("\n").strip("\t").lower()))
+            except:
+                print("bruh")
+                thisjob.append(re.sub("\/\/.*", "", line.strip("\n").strip("\t")))
     jobs.pop(0)
     return jobs

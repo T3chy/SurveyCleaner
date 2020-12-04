@@ -27,7 +27,7 @@ class survey:
         if str(init).lower().strip("'") != str(final).lower().strip("'"):
             if final == "":
                 final = "an empty string"
-            self.changes.append(str(qtype).upper() + ": Replaced " + str(init) + " with " + str(final) + " at respondant with ID " + str(rid)+ " question " + str(init) + " " + reason)
+            self.changes.append(str(qtype).upper() + ": Replaced " + str(init) + " with " + str(final) + " at respondant with ID " + str(rid)+ " question " + str(self.q) + " " + reason)
 
     def validID(self,tmp, log=True):
         if re.search("[a-zA-Z]{2,3}\d{4}", str(tmp)):
@@ -53,14 +53,15 @@ class survey:
             self.data.loc[index,q] = re.sub("\D", "", self.data.loc[index,q])
         self.logChange("numeric", tmp)
     def standardizeEmployment(self, q, index, employedq="QID81 - ¿Está empleada/o actualmente?"):
+        sjob = str(self.data.loc[index,q]).lower().strip()
         for job in jobs:
-            if str(self.data.loc[index,employedq]).lower().strip() == "no":
-                self.data.loc[index,q] = "no (" + str(self.data.loc[index,q]) + ")"
-                return 0
-            elif str(self.data.loc[index,q]).lower().strip() in job[1]: # keeps the thing they put in, but puts it in brackets after "no" if they said "no" to "are you employed"
-                self.data.loc[index,q] = job[0]
-                return 0
-        return 1
+            if str(self.data.loc[index,q]).lower().strip() in job[1]: # keeps the thing they put in, but puts it in brackets after "no" if they said "no" to "are you employed"
+                sjob = job[0]
+                break
+        if str(self.data.loc[index,employedq]).lower().strip() == "no":
+            self.data.loc[index,q] = "no (" + str(sjob) +  ")"
+        else:
+            self.data.loc[index,q] = sjob
     def cleanBinary(self, q, index):
         self.index = index
         self.q = q
@@ -86,12 +87,7 @@ class survey:
             self.flag()
         self.logChange("id", tmp)
     def removeDirectDupes(self):
-        tmp= self.data
-        self.data = self.data.drop_duplicates(b.columns.difference(["Response ID", "Duration (in seconds)", "Unnamed: 0", "Recorded Date", "Start Date", "End Date"]))
-        if not self.data.equals(tmp):
-            pass
-        else:
-            print("no direct duplicates!")
+        pass
     def getDupePairs(self, dupes):
          pairs, group, nans = [], [], []
          tmp = ""
