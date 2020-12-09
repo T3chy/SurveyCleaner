@@ -14,7 +14,7 @@ jobs = parsejobs.parseJobsTxt("jobs.txt")
 class survey:
     def __init__(self,name):
         self.name = name.strip(".xlsx")
-        self.read = pd.read_excel(name)
+        self.read = pd.read_excel(name, engine="openpyxl")
         self.merged = ""
         self.data = self.read.copy()
         self.changes = []
@@ -82,7 +82,7 @@ class survey:
         tmp = str(self.data.loc[index, id]).upper().strip(" ")
         nloc = ""
         try:
-            self.data.loc[index, id] = re.search(tmp, "[a-zA-Z]{2,3}\d{4}").groups(0)
+            self.data.loc[index, id] = re.search("[a-zA-Z]{2,3}\d{4}", tmp).group(0)
         except:
             self.flag()
         self.logChange("id", tmp)
