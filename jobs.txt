@@ -8,7 +8,7 @@ no job:
 	N/A
 	0
 childcare:
-	Cuidado do bebes
+	Cuidado de bebes
 	cuidar nenes
 	babysitter
 	Cuidadora de niños
@@ -19,7 +19,7 @@ food service:
 	buser
 	Cajera en comida rápida
 	food runner
-	resturante // waiter?
+	Restaurante // waiter?
 	Trabajaba en restaurant
 	MAC DONAL
 	Cosinera
@@ -27,6 +27,8 @@ food service:
 	Subway
 	Empleada de cardenas market
 	Bodega
+	restaurante
+	cajera en comida rápida
 trades / skilled labor:
 	carpinteria
 	artista
@@ -104,11 +106,3 @@ volunteer:
 	Trabajo voluntario
 	Promotora de vivienda, del voto y ayudando en el food pantry
 	Trabajo voluntario comunitario
-????:
-	están recostados sobre el pasto que dejaran desparramado los hombres encargados de la empacadora cuando abandonaron el trabajo
-	Relief // therapist? emergency responder?
-	NIÑERA  // baby sister? babysitter?
-	Independiente
-	Fue empacadora // they put "no" to are you employed
-student:
-	Estudiante
