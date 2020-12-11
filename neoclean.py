@@ -86,8 +86,6 @@ class survey:
         except:
             self.flag()
         self.logChange("id", tmp)
-    def removeDirectDupes(self):
-        pass
     def getDupePairs(self, dupes):
          pairs, group, nans = [], [], []
          tmp = ""
@@ -104,106 +102,20 @@ class survey:
                 tmp = row[id]
          pairs.append(group)
          return pairs, nans
-    def ResolveRedoes(self): # just falg don't delete- deleting is bad when autmated cuz we don't rly know what it is
-        dupes = self.data[self.data.duplicated(subset=[id, "IP Address"], keep=False)]
-        print(dupes)
-        pairs, nans = self.getDupePairs(dupes)
-        for pair in pairs:
-            idx = 0
-            latest = 0
-            best = pair[0]
-            for b in pair:
-                #if dt.strptime(str(b["End Date"]), "%Y-%m-%d %H:%M:%S") > dt.strptime(str(best["End Date"],"%Y-%m-%d %H:%M:%S")):
-                if b["End Date"] > best["End Date"]:
-                    latest = idx
-                    best = b[idx]
-                idx += 1
-            n = 0
-            for bruh in pair:
-                if n == latest:
-                    pass
-                else:
-                    self.data = self.data.drop(self.data[self.data == bruh].index)
-                n += 1
-
     def resolveIdDupes(self):
-         self.removeDirectDupes()
          dupes = self.data[self.data.duplicated(subset=[id], keep=False)].sort_values(by=[id])
          pairs, nans = self.getDupePairs(dupes)
          if pairs == [[]] and nans == []:
              print("No collisions detected!")
          else:
-             if True: # currently just writing out collisions- not sure what Laura wants to do w resolving em
-                dupes.to_excel(self.name + "_collisions.xlsx")
-                print("Collisions written to " + self.name + "_collisions.xlsx")
-             else:
-                 choice = input(str(len(pairs)) + " duplicate pair(s) detected! Would you like to resolve them here? [y/N]\n")
-                 if choice.lower() == "y" or choice.lower() == "yes":
-                     if pairs != [[]]:
-                         for pair in pairs:
-                             print("Colliding id detected!")
-                             n = 1
-                             for bruh in pair:
-                                 print("Respondant " + str(n) + ":")
-                                 print(bruh)
-                                 n += 1
-                             choice = "N"
-                             while not isinstance(choice, int):
-                                try:
-                                    choice = int(input("Which respondant would you like to keep?\n"))
-                                    if choice > len(pair):
-                                        print("Please input a valid respondant number!")
-                                        choice = "N"
-                                except:
-                                    print("please input a number!")
-                             n = 1
-                             for bruh in pair:
-                                 if n == choice:
-                                     pass
-                                 else:
-                                     self.data = self.data.drop(self.data[self.data["Response ID"] == bruh["Response ID"]].index)
-                                 n += 1
-                     if not nans == []:
-                         self.handlenanID(nans)
-                 else:
-                    print("ok! Please resolve them in the original input xlsx, and rerun this script!")
-    def handlenanID(self, nans):
-         print(str(len(nans)) + " nan ids detected!")
-         n = 1
-         for bruh in nans:
-             print("Respondant " + str(n) + ":")
-             print(bruh)
-             n += 1
-         choice = "N"
-         while not isinstance(choice, int):
-            try:
-                choice = int(input("Which respondant would you like to keep?\n"))
-                if choice > len(nans):
-                    print("Please input a valid respondant number!")
-                    choice = "N"
-            except:
-                print("please input a number!")
-         n = 1
-         for bruh in nans:
-             if n == choice:
-                 pass
-             else:
-                 self.data = self.data.drop(self.data[self.data["Response ID"] == bruh["Response ID"]].index)
-             n += 1
+            dupes.to_excel(self.name + "_collisions.xlsx")
+            print("Collisions will be written to " + self.name + "_collisions.xlsx")
     def merge(self, other):
         try:
             self.merged = self.data.merge(other.data, left_on=[id,post], right_on=[id,post], validate="1:1")
             print("merged!")
-        except:
-            print("Merge failed! Attempting to resolve collisions...")
-            self.attemptResolvebyMerge(other)
-    def attemptResolvebyMerge(self, other):
-        self.resolveIdDupes(other=other.data)
-        other.resolveIdDupes(other=self.data)
-        try:
-            self.data.merge(other.data, left_on=[id], right_on=[id], validate="1:1")
-        except:
-            print("fail")
+        except Exception as e:
+            print(e)
     def cleanColumn(self, dtype, colname=""):
         if dtype.lower() == "binary":
             for idx, row in self.data.iterrows():
