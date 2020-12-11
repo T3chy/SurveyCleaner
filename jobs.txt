@@ -14,6 +14,8 @@ childcare:
 	Cuidadora de niños
 	Nani //nany?
 	Cuido Niño en la escuela
+	niñera
+	nani
 food service:
 	cosina
 	buser
@@ -64,6 +66,9 @@ unskilled:
 	Promotora de salud  // I don't think community health workers are credentialed?
 	Promotora de salud comunitaria
 	Hostess/ promotora de salud
+	abogacia
+	hostess/promotora de salud
+	promotora de salud
 homemaker(for own family):
 	Ayuda en casa
 	Cuidado de niños en casa
@@ -89,9 +94,11 @@ assistant/secretary kinda ones:
 	Officina // context required
 	Cordinadora de Programs de la Tercera Edad // this might be white-collar
 	Customer service’s
+	ventas // iffy on this one
 credentialed jobs:
 	Teacher
 	Cosmetologa
+	cosmetiloga
 
 white-collar:
 	publicidad // advertising?
